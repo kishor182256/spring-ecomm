@@ -7,6 +7,7 @@ import com.example.Ecommerce.Ecommerce.repository.UserRepository;
 import com.example.Ecommerce.Ecommerce.services.UserServiceOperations;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -18,6 +19,9 @@ public class UserServiceImpl implements UserServiceOperations {
     @Autowired
     private UserRepository userRepository;
 
+    @Autowired
+    private  PasswordEncoder passwordEncoder;
+
     @Override
     public UserDto createUser(UserDto userData) {
         if (userRepository.existsByEmail(userData.getEmail())) {
@@ -26,7 +30,9 @@ public class UserServiceImpl implements UserServiceOperations {
         }
 
         try {
+            String encodedPassword = passwordEncoder.encode(userData.getPassword());
             User user = modelMapper.map(userData, User.class);
+            user.setPassword(encodedPassword);
             User savedUser = userRepository.save(user);
             return modelMapper.map(savedUser, UserDto.class);
         } catch (Exception e) {
