@@ -12,4 +12,8 @@ public enum Roles {
 
     private final int id;
 
+    public static Roles fromString(String value) {
+        return Roles.valueOf(value.toUpperCase());
+    }
+
 }

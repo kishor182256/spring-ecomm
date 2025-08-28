@@ -6,6 +6,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.context.annotation.Bean;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -14,6 +15,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.util.List;
 
 @Component
 public class JwtAuthFilter extends OncePerRequestFilter {
@@ -23,6 +25,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
     public JwtAuthFilter(JwtUtil jwtUtil) {
         this.jwtUtil = jwtUtil;
     }
+
 
     @Override
     protected void doFilterInternal(HttpServletRequest request,
@@ -36,12 +39,15 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 
             if (jwtUtil.validateToken(jwt)) {
                 String username = jwtUtil.extractUsername(jwt);
-                UsernamePasswordAuthenticationToken authToken =
-                        new UsernamePasswordAuthenticationToken(username, null, null);
+                String role = jwtUtil.extractRole(jwt); // e.g. "ADMIN"
 
-                authToken.setDetails(
-                        new WebAuthenticationDetailsSource().buildDetails(request)
-                );
+                // Spring expects roles as ROLE_XXX
+                SimpleGrantedAuthority authority = new SimpleGrantedAuthority("ROLE_" + role);
+
+                UsernamePasswordAuthenticationToken authToken =
+                        new UsernamePasswordAuthenticationToken(username, null, List.of(authority));
+
+                authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
 
                 SecurityContextHolder.getContext().setAuthentication(authToken);
             }
@@ -49,6 +55,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 
         filterChain.doFilter(request, response);
     }
+
 
     @Bean
     public PasswordEncoder passwordEncoder() {
