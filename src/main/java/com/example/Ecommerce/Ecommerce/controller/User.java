@@ -4,6 +4,7 @@ import com.example.Ecommerce.Ecommerce.dto.LoginRequest;
 import com.example.Ecommerce.Ecommerce.dto.LoginResponse;
 import com.example.Ecommerce.Ecommerce.dto.UserDto;
 import com.example.Ecommerce.Ecommerce.dto.UserRoleUpdateRequest;
+import com.example.Ecommerce.Ecommerce.enums.Roles;
 import com.example.Ecommerce.Ecommerce.exception.AccessDeniedCustomException;
 import com.example.Ecommerce.Ecommerce.helper.CheckCurrentUserRole;
 import com.example.Ecommerce.Ecommerce.helper.JwtUtil;
@@ -17,6 +18,8 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/user-operations")
@@ -57,7 +60,15 @@ public class User {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
         }
         String token = jwtUtil.generateToken(user.getEmail(), user.getRole());
-        LoginResponse response = new LoginResponse(token, user.getEmail(), user.getRole().name());
+        String refreshToken = jwtUtil.generateRefreshToken(user.getEmail());
+        LoginResponse response = new LoginResponse(
+                token,
+
+                user.getEmail(),
+                user.getRole().name(),
+                refreshToken
+        );
+
         return ResponseEntity.ok(response);
     }
 
@@ -74,6 +85,29 @@ public class User {
 
         UserDto updatedUser = userService.updateUserRole(request.getUserId(), request.getRole());
         return ResponseEntity.ok(updatedUser);
+    }
+
+    @PostMapping("/get-refresh-token")
+    public ResponseEntity<?> refresh(@RequestBody Map<String, String> request) {
+        String refreshToken = request.get("refreshToken");
+
+        if (jwtUtil.validateToken(refreshToken) && jwtUtil.isRefreshToken(refreshToken)) {
+            String email = jwtUtil.extractUsername(refreshToken);
+            Roles role = userService.getUserRoleByEmail(email); // lookup in DB
+
+            // generate a new access token
+            String newAccessToken = jwtUtil.generateToken(email, role);
+
+            // (optional) you can also issue a new refresh token
+            String newRefreshToken = jwtUtil.generateRefreshToken(email);
+
+            return ResponseEntity.ok(Map.of(
+                    "accessToken", newAccessToken,
+                    "refreshToken", newRefreshToken
+            ));
+        }
+
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid refresh token");
     }
 
 

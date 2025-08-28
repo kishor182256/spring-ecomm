@@ -8,6 +8,7 @@ import com.example.Ecommerce.Ecommerce.repository.UserRepository;
 import com.example.Ecommerce.Ecommerce.services.UserServiceOperations;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -69,6 +70,14 @@ public class UserServiceImpl implements UserServiceOperations {
         user.setRole(newRole);
         User savedUser = userRepository.save(user);
         return modelMapper.map(savedUser, UserDto.class);
+    }
+
+    public Roles getUserRoleByEmail(String email) {
+        User user = userRepository.findByEmail(email);
+        if (user == null) {
+            throw new UsernameNotFoundException("User not found with email: " + email);
+        }
+        return user.getRole();
     }
 
 

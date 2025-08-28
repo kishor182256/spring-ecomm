@@ -27,6 +27,16 @@ public class JwtUtil {
                 .compact();
     }
 
+    public String generateRefreshToken(String email) {
+        return Jwts.builder()
+                .setSubject(email)
+                .claim("type", "REFRESH")
+                .setIssuedAt(new Date())
+                .setExpiration(new Date(System.currentTimeMillis() + EXPIRATION_TIME))
+                .signWith(key, SignatureAlgorithm.HS256)
+                .compact();
+    }
+
     public Claims getAllClaims(String token) {
         return Jwts.parserBuilder()
                 .setSigningKey(key)
@@ -60,6 +70,13 @@ public class JwtUtil {
     public String extractRole(String token) {
         return getClaims(token).get("role", String.class);
     }
+
+    public boolean isRefreshToken(String token) {
+        Claims claims = getAllClaims(token);
+        String type = claims.get("type", String.class);
+        return "REFRESH".equals(type);
+    }
+
 
     public boolean validateToken(String token) {
         try {

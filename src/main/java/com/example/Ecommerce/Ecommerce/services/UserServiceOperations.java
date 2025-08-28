@@ -2,6 +2,7 @@ package com.example.Ecommerce.Ecommerce.services;
 
 
 import com.example.Ecommerce.Ecommerce.dto.UserDto;
+import com.example.Ecommerce.Ecommerce.enums.Roles;
 
 public interface UserServiceOperations {
 
@@ -17,4 +18,5 @@ public interface UserServiceOperations {
 
     UserDto updateUserRole(Long userId, String roleName);
 
+    Roles getUserRoleByEmail(String email);
 }
