@@ -3,6 +3,8 @@ package com.example.Ecommerce.Ecommerce.controller;
 import com.example.Ecommerce.Ecommerce.dto.LoginRequest;
 import com.example.Ecommerce.Ecommerce.dto.LoginResponse;
 import com.example.Ecommerce.Ecommerce.dto.UserDto;
+import com.example.Ecommerce.Ecommerce.dto.UserRoleUpdateRequest;
+import com.example.Ecommerce.Ecommerce.exception.AccessDeniedCustomException;
 import com.example.Ecommerce.Ecommerce.helper.CheckCurrentUserRole;
 import com.example.Ecommerce.Ecommerce.helper.JwtUtil;
 import com.example.Ecommerce.Ecommerce.repository.UserRepository;
@@ -58,6 +60,23 @@ public class User {
         LoginResponse response = new LoginResponse(token, user.getEmail(), user.getRole().name());
         return ResponseEntity.ok(response);
     }
+
+    @PostMapping("/update-user-role")
+    public ResponseEntity<UserDto> updateUserRole(@RequestBody UserRoleUpdateRequest request) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+
+        boolean isSuperAdmin = auth.getAuthorities()
+                .stream().anyMatch(a -> a.getAuthority().equals("ROLE_SUPER_ADMIN"));
+
+        if (!isSuperAdmin) {
+            throw new AccessDeniedCustomException("Required role: SUPER_ADMIN");
+        }
+
+        UserDto updatedUser = userService.updateUserRole(request.getUserId(), request.getRole());
+        return ResponseEntity.ok(updatedUser);
+    }
+
+
 
 
 

@@ -2,6 +2,7 @@ package com.example.Ecommerce.Ecommerce.services.impl;
 
 import com.example.Ecommerce.Ecommerce.dto.UserDto;
 import com.example.Ecommerce.Ecommerce.entity.User;
+import com.example.Ecommerce.Ecommerce.enums.Roles;
 import com.example.Ecommerce.Ecommerce.exception.UserCreationException;
 import com.example.Ecommerce.Ecommerce.repository.UserRepository;
 import com.example.Ecommerce.Ecommerce.services.UserServiceOperations;
@@ -60,4 +61,15 @@ public class UserServiceImpl implements UserServiceOperations {
     public UserDto getUserByEmail(String email) {
         return null;
     }
+
+    public UserDto updateUserRole(Long userId, String roleName) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        Roles newRole = Roles.fromString(roleName);
+        user.setRole(newRole);
+        User savedUser = userRepository.save(user);
+        return modelMapper.map(savedUser, UserDto.class);
+    }
+
+
 }

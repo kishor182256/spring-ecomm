@@ -15,4 +15,6 @@ public interface UserServiceOperations {
 
     UserDto getUserByEmail(String email);
 
+    UserDto updateUserRole(Long userId, String roleName);
+
 }
