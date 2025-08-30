@@ -44,5 +44,10 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(body, HttpStatus.FORBIDDEN);
     }
 
+    @ExceptionHandler(ProductCategoryCreateException.class)
+    public ResponseEntity<String> handleProductCategoryCreateException(ProductCategoryCreateException ex) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ex.getMessage());
+    }
+
 
 }
